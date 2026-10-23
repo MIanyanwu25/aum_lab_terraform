@@ -1,0 +1,9 @@
+resource_group_name   = "rg-aumlab"
+location              = "eastus"
+admin_username        = "labadmin"
+allowed_rdp_source_ip = "203.0.113.10"        # Replace with your public IP
+key_vault_name        = "kv-aumlab-<unique>" # Replace with your globally unique name
+
+# admin_password is deliberately NOT set here.
+# Set it per terminal session instead, so it's never written to disk:
+#   PowerShell:  $env:TF_VAR_admin_password = "..."
