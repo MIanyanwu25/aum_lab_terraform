@@ -6,7 +6,8 @@
 
 ## Lab Architecture
 
-<img width="2760" height="2912" alt="azure_lab3_architecture" src="https://github.com/user-attachments/assets/10d0a5f4-fcbf-4a50-be2e-a2d29cd06947" />
+<img width="2720" height="2913" alt="azure_lab3_architecture (updated)" src="https://github.com/user-attachments/assets/3904cd78-8b62-43b4-9e00-4180efe8811c" />
+
 ```
 
 ```
