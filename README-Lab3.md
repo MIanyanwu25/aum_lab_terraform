@@ -6,31 +6,10 @@
 
 ## Lab Architecture
 
+<img width="2720" height="2913" alt="azure_lab3_architecture (updated)" src="https://github.com/user-attachments/assets/3904cd78-8b62-43b4-9e00-4180efe8811c" />
+
 ```
-Azure Subscription (eastus)
-├── Resource Group: rg-aumlab
-│   ├── VNet: 10.0.0.0/16
-│   │   └── Subnet: 10.0.0.0/24
-│   │
-│   ├── VMs:
-│   │   ├── DC01 (10.0.1.4) - Domain Controller
-│   │   ├── WS01 (10.0.1.6) - Workstation
-│   │   └── WS02 (10.0.1.5) - Workstation
-│   │
-│   ├── Networking:
-│   │   ├── Network Security Group (NSG) - Port 3389 RDP allowed
-│   │   ├── Public IPs for each VM
-│   │   └── Network Interfaces
-│   │
-│   ├── Security:
-│   │   └── Key Vault: kv-aumlab-7c3e9a18 (stores VM admin password)
-│   │
-│   └── Update Manager:
-│       ├── Maintenance Window: aum-ws-maintenance-window (Tuesday 02:00 UTC)
-│       └── Maintenance Window: aum-dc-maintenance-window (Wednesday 03:00 UTC)
-│
-└── Resource Group: rg-tfstate
-    └── Storage Account: tfstateaumlab0783 (Terraform state storage)
+
 ```
 
 ## Key Components
