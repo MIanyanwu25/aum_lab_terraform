@@ -1,36 +1,5 @@
-# Lab 3: Promote DC01 to Domain Controller for aum.local
-# Purpose: Create Active Directory forest and domain
+# 00-promote-dc.ps1 - Manual DC promotion (if orchestrate fails)
+# Run this via RDP on DC01 if simplified-orchestrate.ps1 Step 1 fails
 
-param(
-    [string]$DomainName = "aum.local",
-    [string]$NetBIOSName = "AUM",
-    [securestring]$SafeModeAdminPassword
-)
-
-# If password not provided, prompt for it
-if (-not $SafeModeAdminPassword) {
-    $SafeModeAdminPassword = Read-Host "Enter Safe Mode Administrator Password" -AsSecureString
-}
-
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Lab 3: Promoting DC01 to Domain Controller"
-Write-Host "Domain: $DomainName"
-Write-Host "NetBIOS: $NetBIOSName"
-Write-Host "========================================" -ForegroundColor Cyan
-
-# Install AD DS and DNS roles
-Write-Host "Installing Active Directory Domain Services..." -ForegroundColor Yellow
-Install-WindowsFeature -Name AD-Domain-Services, DNS -IncludeManagementTools -Restart:$false
-
-# Install ADDSForest
-Write-Host "Installing Forest: $DomainName" -ForegroundColor Yellow
-Install-ADDSForest `
-    -DomainName $DomainName `
-    -DomainNetBIOSName $NetBIOSName `
-    -SafeModeAdministratorPassword $SafeModeAdminPassword `
-    -Force `
-    -Confirm:$false `
-    -NoRebootOnCompletion
-
-Write-Host "Domain promotion complete! Reboot required." -ForegroundColor Green
-Write-Host "Run: Restart-Computer -Force" -ForegroundColor Yellow
+Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools
+Install-ADDSForest -DomainName aum.local -SafeModeAdministratorPassword (ConvertTo-SecureString -AsPlainText -Force 'MichaelI#2026') -Force

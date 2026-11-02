@@ -1,46 +1,92 @@
 # Lab 3: Create Security Groups
-# Purpose: Create department and role-based security groups
-# Run this on DC01
+# Purpose: Create security groups on DC01
+# RECOMMENDED: Run directly on DC01 via RDP as Administrator
+# Remote execution via Azure CLI may not produce output reliably
+# NOTE: Run 02-create-ous.ps1 FIRST - Groups OU must exist before running this script
 
-param(
-    [string]$DomainName = "aum.local"
-)
+# =============================================
+# OPTION A: Run directly on DC01 via RDP
+# =============================================
+# 1. RDP into DC01 as labadmin
+# 2. Open PowerShell as Administrator
+# 3. Run the commands below directly
 
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Lab 3: Creating Security Groups"
-Write-Host "Domain: $DomainName"
-Write-Host "========================================" -ForegroundColor Cyan
+$groupPath = "OU=Groups,DC=aum,DC=local"
 
-# Get domain DN
-$domainDN = "DC=" + ($DomainName -split '\.' | ForEach-Object { "DC=$_" } | Join-String -Separator ",")
-$groupsOU = "OU=Groups,$domainDN"
+New-ADGroup -Name "IT_Staff" -SamAccountName IT_Staff -GroupCategory Security -GroupScope Global -Path $groupPath
+Write-Host "Created Group: IT_Staff"
 
-# Define groups: @(Name, Description, Path)
-$groups = @(
-    @("IT_Staff", "IT Department Staff", $groupsOU),
-    @("Sales_Team", "Sales Department Team", $groupsOU),
-    @("HR_Staff", "Human Resources Staff", $groupsOU),
-    @("Workstation_Admins", "Local Admins on Workstations", $groupsOU)
-)
+New-ADGroup -Name "Sales_Team" -SamAccountName Sales_Team -GroupCategory Security -GroupScope Global -Path $groupPath
+Write-Host "Created Group: Sales_Team"
 
-foreach ($group in $groups) {
-    $groupName = $group[0]
-    $description = $group[1]
-    $path = $group[2]
-    
-    if (-not (Get-ADGroup -Filter "Name -eq '$groupName'" -ErrorAction SilentlyContinue)) {
-        Write-Host "Creating group: $groupName" -ForegroundColor Yellow
-        New-ADGroup `
-            -Name $groupName `
-            -SamAccountName $groupName `
-            -GroupCategory Security `
-            -GroupScope Global `
-            -Description $description `
-            -Path $path `
-            -Confirm:$false
-    } else {
-        Write-Host "Group already exists: $groupName" -ForegroundColor Green
-    }
+New-ADGroup -Name "HR_Staff" -SamAccountName HR_Staff -GroupCategory Security -GroupScope Global -Path $groupPath
+Write-Host "Created Group: HR_Staff"
+
+New-ADGroup -Name "Workstation_Admins" -SamAccountName Workstation_Admins -GroupCategory Security -GroupScope Global -Path $groupPath
+Write-Host "Created Group: Workstation_Admins"
+
+Write-Host ""
+Write-Host "All groups created successfully!" -ForegroundColor Green
+
+# Verify
+Write-Host ""
+Write-Host "Verification - Custom security groups:"
+Get-ADGroup -Filter * -SearchBase "OU=Groups,DC=aum,DC=local" | Select-Object Name, GroupScope, GroupCategory | Format-Table -AutoSize
+
+# =============================================
+# OPTION B: Remote execution via Azure CLI
+# =============================================
+# Run this from your LOCAL machine if Option A is not available
+# Note: Output may be blank even on success - always verify afterwards
+
+<#
+$ResourceGroupName = "rg-aumlab"
+$DC01Name = "DC01"
+
+$groupScript = @'
+Import-Module ActiveDirectory -ErrorAction SilentlyContinue
+
+$groupPath = "OU=Groups,DC=aum,DC=local"
+
+New-ADGroup -Name "IT_Staff" -SamAccountName IT_Staff -GroupCategory Security -GroupScope Global -Path $groupPath
+Write-Host "Created Group: IT_Staff"
+
+New-ADGroup -Name "Sales_Team" -SamAccountName Sales_Team -GroupCategory Security -GroupScope Global -Path $groupPath
+Write-Host "Created Group: Sales_Team"
+
+New-ADGroup -Name "HR_Staff" -SamAccountName HR_Staff -GroupCategory Security -GroupScope Global -Path $groupPath
+Write-Host "Created Group: HR_Staff"
+
+New-ADGroup -Name "Workstation_Admins" -SamAccountName Workstation_Admins -GroupCategory Security -GroupScope Global -Path $groupPath
+Write-Host "Created Group: Workstation_Admins"
+
+Write-Host "All groups created!" -ForegroundColor Green
+Get-ADGroup -Filter * -SearchBase "OU=Groups,DC=aum,DC=local" | Select-Object Name, GroupScope | Format-Table -AutoSize
+'@
+
+$result = az vm run-command invoke `
+    --resource-group $ResourceGroupName `
+    --name $DC01Name `
+    --command-id RunPowerShellScript `
+    --scripts $groupScript `
+    --output json | ConvertFrom-Json
+
+Write-Host $result.value[0].message
+if ($result.value[1].message) {
+    Write-Host "Errors:" -ForegroundColor Red
+    Write-Host $result.value[1].message
 }
 
-Write-Host "Security groups created successfully!" -ForegroundColor Green
+# Always verify after remote execution
+Write-Host "Verifying groups were created..."
+$verifyScript = @'
+Get-ADGroup -Filter * -SearchBase "OU=Groups,DC=aum,DC=local" | Select-Object Name, GroupScope | Format-Table -AutoSize
+'@
+
+az vm run-command invoke `
+    --resource-group $ResourceGroupName `
+    --name $DC01Name `
+    --command-id RunPowerShellScript `
+    --scripts $verifyScript `
+    --query 'value[0].message' -o tsv
+#>
